@@ -37,4 +37,29 @@ object CommonOperationsRDD {
 
   }
 
+  implicit class PrescriptionsRDD(rdd: RDD[(String, PrescriptionRecord)]) {
+
+    /**
+     * Groups the antibiotic prescriptions by type, GP and period
+     * @param antibiotics antibiotic RDD
+     * @return
+     */
+    def aggregateAntibioticsByGP(antibiotics: RDD[(String, AntibioticRecord)]) = {
+
+      val prescriptionsWithAntibiotics: RDD[(String, (PrescriptionRecord, AntibioticRecord))] = rdd.join[AntibioticRecord](antibiotics)
+
+      // Group by Antibiotic type, GP and period. Equivalent Hive query:
+      // SELECT p.sha, p.pct, p.practice, a.bnf_code_prefix, a.bnf_chemical_name, SUM(p.items) as total_items, SUM(p.act_cost) as total_cost, period
+      // FROM gp_prescriptions p JOIN antibiotics a ON p.bnf_code = a.bnf_code
+      // GROUP BY p.sha, p.pct, p.practice, a.bnf_code_prefix, a.bnf_chemical_name, period;
+      val result = prescriptionsWithAntibiotics.map(record => {
+        val (prescription, antibiotic) = record._2
+        ((prescription.sha, prescription.pct, prescription.practice, antibiotic.bnfShortCode, antibiotic.bnfChemicalName, prescription.period), (prescription.items, prescription.actCost))
+      })
+        .reduceByKey((values1, values2) => (values1._1 + values2._1, values1._2 + values2._2))
+
+      result
+    }
+  }
+
 }

@@ -19,5 +19,9 @@ object AntibioticsByGPApp {
 
     val prescriptions: RDD[(String, PrescriptionRecord)] = sc.textFile(prescriptionsPath).skipHeader.createPrescriptionRDD
 
+    prescriptions.aggregateAntibioticsByGP(antibiotics).take(5).map(println)
+
+    sc.stop()
+
   }
 }

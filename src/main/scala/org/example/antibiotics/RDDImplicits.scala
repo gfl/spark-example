@@ -10,7 +10,7 @@ object RDDImplicits {
 
     /**
      * Skips the input header of a CSV input file.
-     * @return RDD 
+     * @return RDD
      */
     def skipHeader: RDD[T] = {
       rdd.mapPartitionsWithIndex { (idx, iter) => if (idx == 0) iter.drop(1) else iter }

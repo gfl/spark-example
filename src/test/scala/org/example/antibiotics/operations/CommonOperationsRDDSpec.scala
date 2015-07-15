@@ -43,5 +43,48 @@ class CommonOperationsRDDSpec extends FlatSpec with SparkSpec with GivenWhenThen
 
   }
 
+  behavior of "aggregateAntibioticsByGP"
+
+  it should "ignore not antibiotics prescriptions" in {
+    Given("Prescriptions that are not antibiotics")
+    val prescriptions = Seq(("BN_CODEX", new PrescriptionRecord("SHA1","PCT1","PRACTICE1","BNF_CODEX","BNF_NAME1",1,0.63f,0.61f,50,"201411")))
+
+    And("List of antibiotics")
+    val antibiotics = Seq(("BNF_CODE1", new AntibioticRecord("BNF_CODE1","BNF_SHORT_CODE1","SECTION_NAME1","CHEMICAL_NAME1","DRUG_NAME1",3,1,15.0f,"GROUP1")),
+      ("BNF_CODE2", new AntibioticRecord("BNF_CODE2","BNF_SHORT_CODE1","SECTION_NAME1","CHEMICAL_NAME1","DRUG_NAME2",3,1,12.0f,"GROUP1")),
+      ("BNF_CODE3", new AntibioticRecord("BNF_CODE3","BNF_SHORT_CODE3","SECTION_NAME1","CHEMICAL_NAME3","Drug name 500mg Vl (Dry)",1,1,552.0f,"GROUP3")))
+
+    When("aggregating prescriptions of antibiotics")
+    val prescriptionsRDD1 = sc.parallelize(prescriptions)
+    val aggPrescriptions = prescriptionsRDD1.aggregateAntibioticsByGP(sc.parallelize(antibiotics)).collect()
+
+    Then("empty count")
+    aggPrescriptions shouldBe empty
+  }
+
+  it should "count the antibiotics prescriptions" in {
+
+    Given("Prescriptions that are antibiotics")
+    val prescriptions2 = Seq(("BNF_CODE1", new PrescriptionRecord("SHA1","PCT1","PRACTICE1","BNF_CODE1","BNF_NAME1",1,0.63f,0.5f,50,"201411")),
+      ("BNF_CODE2", new PrescriptionRecord("SHA2","PCT2","PRACTICE2","BNF_CODE2","BNF_NAME1",2,0.63f,1.5f,100,"201411")))
+
+    And("List of antibiotics")
+    val antibiotics = Seq(("BNF_CODE1", new AntibioticRecord("BNFCODE1","BNF_SHORT_CODE1","SECTION_NAME1","CHEMICAL_NAME1","DRUG_NAME1",3,1,15.0f,"GROUP1")),
+      ("BNF_CODE2", new AntibioticRecord("BNF_CODE2","BNF_SHORT_CODE1","SECTION_NAME1","CHEMICAL_NAME1","DRUG_NAME2",3,1,12.0f,"GROUP1")),
+      ("BNF_CODE3", new AntibioticRecord("BNF_CODE3","BNF_SHORT_CODE3","SECTION_NAME1","CHEMICAL_NAME3","Drug name 500mg Vl (Dry)",1,1,552.0f,"GROUP3")))
+
+    When("aggregating prescriptions of antibiotics")
+    val prescriptionsRDD2 = sc.parallelize(prescriptions2)
+    val aggPrescriptions = prescriptionsRDD2.aggregateAntibioticsByGP(sc.parallelize(antibiotics)).collect()
+
+    Then("empty count")
+    // ((prescription.sha, prescription.pct, prescription.practice, antibiotic.bnfShortCode, antibiotic.bnfChemicalName, prescription.period), (prescription.items, prescription.actCost))
+    val expectedOutput = Set(
+      (("SHA1", "PCT1", "PRACTICE1", "BNF_SHORT_CODE1", "CHEMICAL_NAME1", "201411"), (1, 0.5f)),
+      (("SHA2", "PCT2", "PRACTICE2", "BNF_SHORT_CODE1", "CHEMICAL_NAME1", "201411"), (2, 1.5f)))
+    aggPrescriptions.toSet shouldBe expectedOutput
+
+  }
+
 
 }
