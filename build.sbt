@@ -8,7 +8,9 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 // additional libraries
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % "1.3.0" % "provided",
+  "org.apache.spark" %% "spark-core" % "1.3.1" % "provided",
+  "org.apache.spark" %% "spark-sql" % "1.3.1",
+  "org.apache.spark" %% "spark-hive" % "1.3.1",
   "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
 )
 

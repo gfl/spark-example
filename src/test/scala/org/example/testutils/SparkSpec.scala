@@ -1,6 +1,7 @@
 package org.example.testutils
 
 import org.apache.spark._
+import org.apache.spark.sql.Row
 import org.scalatest._
 
 trait SparkSpec extends BeforeAndAfterEach {
@@ -16,6 +17,7 @@ trait SparkSpec extends BeforeAndAfterEach {
   val conf: SparkConf = new SparkConf()
     .setMaster(master)
     .setAppName(appName)
+    .set("spark.ui.enabled", "false")
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -35,4 +37,12 @@ trait SparkSpec extends BeforeAndAfterEach {
     super.afterEach()
   }
 
+  implicit def toSeqOfTuples[R <: Row](as:Array[R]): Array[Product] = {
+    val result = as.map((row: Row) => {
+      val tupleClass = Class.forName("scala.Tuple" + row.size)
+      val rowElems = row.toSeq.asInstanceOf[Seq[Object]]
+      tupleClass.getConstructors.apply(0).newInstance(rowElems: _*).asInstanceOf[Product]
+    })
+    result
+  }
 }
