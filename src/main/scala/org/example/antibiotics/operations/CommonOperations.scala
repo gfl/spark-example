@@ -16,7 +16,7 @@ object CommonOperations {
      * Transforms a String RDD into an antibiotic RDD
      * @return RDD with AntibioticRecords
      */
-    def createAntibioticsRDD(implicit ev1: ClassTag[String]): RDD[AntibioticRecord] = rdd match {
+    def createAntibioticsRDD[ClassTag[String]]: RDD[AntibioticRecord] = rdd match {
       case stringRDD: RDD[String] => {
         stringRDD.asInstanceOf[RDD[String]].map(_.split(",")).map(a => AntibioticRecord(a))
       }
@@ -27,7 +27,7 @@ object CommonOperations {
      * Transforms a String RDD into a prescription RDD
      * @return RDD with PrescriptionRecords
      */
-    def createPrescriptionRDD: RDD[PrescriptionRecord] = rdd match {
+    def createPrescriptionRDD[ClassTag[String]]: RDD[PrescriptionRecord] = rdd match {
       case stringRDD: RDD[String] => {
         stringRDD.asInstanceOf[RDD[String]].map(_.split(",")).map(b => PrescriptionRecord(b))
       }
